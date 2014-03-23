@@ -4,7 +4,7 @@
   <title><![CDATA[boatinriver's Blog]]></title>
   <link href="http://boatinriver.github.io/atom.xml" rel="self"/>
   <link href="http://boatinriver.github.io/"/>
-  <updated>2014-03-19T10:40:24+08:00</updated>
+  <updated>2014-03-23T20:52:41+08:00</updated>
   <id>http://boatinriver.github.io/</id>
   <author>
     <name><![CDATA[boatinriver]]></name>
@@ -12,5 +12,271 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[宏命令中的'#'和‘##’]]></title>
+    <link href="http://boatinriver.github.io/blog/2014/03/23/hong-ming-ling-zhong-de-number-he-number-number/"/>
+    <updated>2014-03-23T17:10:47+08:00</updated>
+    <id>http://boatinriver.github.io/blog/2014/03/23/hong-ming-ling-zhong-de-number-he-number-number</id>
+    <content type="html"><![CDATA[<p>在编写iOS的代码时，我们通常要与宏打交道。高手写的宏各种眼花缭乱，各种不能理解。作为一个宏命令的新手，也碰到了各种各样的问题（<em>这里是指我，泪目</em>）。</p>
+
+<p>最让我迷惑的就是宏命令的中<code>#</code>和<code>##</code>，我们先来看一段代码：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="cp">#define f(a,b) a##b</span>
+</span><span class='line'><span class="cp">#define g(a)   #a</span>
+</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="n">g</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)));</span>
+</span><span class='line'>        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="n">g</span><span class="p">(</span><span class="mi">1</span><span class="p">));</span>
+</span><span class='line'>        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>#</code>命令的作用是将后面的变量字符串化(<strong>stringizing</strong>)，<code>##</code>的作用则是将前后两个变量连接到一起(<strong>token-pasting</strong>)变成单一令牌(<strong>single token</strong>)。输出结果非常的明显：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="c1">//print</span>
+</span><span class='line'><span class="c1">//1##2 = 12</span>
+</span><span class='line'><span class="c1">//#1 = 1</span>
+</span><span class='line'><span class="mi">12</span>
+</span><span class='line'><span class="mi">1</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这里还有一个要注意的地方，<code>##</code>不是直接将连接的参数转成字符串输出（如果这里改成 <code>printf("%s\n",f(1,2))</code>，运行时就会报错）。
+看上去非常的简单吧，我一开始也是这么认为的，我们将这段代码改造一下：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class='line'><span class="cp">#define f(a,b) a##b</span>
+</span><span class='line'><span class="cp">#define g(a)   #a</span>
+</span><span class='line'><span class="cp">#define h(a) g(a)</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>      <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="n">h</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)));</span>
+</span><span class='line'>      <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="n">g</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)));</span>
+</span><span class='line'>      <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>输出的会是什么呢，大家看结果前可以先想一想！</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="c1">//print</span>
+</span><span class='line'><span class="mi">12</span>
+</span><span class='line'><span class="n">f</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>是不是有人觉得宏展开后输出的结果应该是</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="c1">//print</span>
+</span><span class='line'><span class="mi">12</span>
+</span><span class='line'><span class="mi">12</span> <span class="c1">//我是错的</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这到底是什么原因呢，我们一步一步展开宏，看到底发生了些什么：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="n">g</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span> <span class="o">-&gt;</span>  <span class="err">#</span><span class="n">f</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>  <span class="o">-&gt;</span>  <span class="n">f</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">//转换结果</span>
+</span><span class='line'><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="n">g</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)));</span>  <span class="c1">//-&gt; printf(&quot;%s\n&quot;,&quot;f(1,2)&quot;);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>大家一定会疑惑为什么<code>#f(1,2)</code>没有展开成<code># 1##2</code>，这是因为一个参数在函数类宏命令(<strong>function-like macro</strong>)进行展开时，在参数被替换之前会先展开，但是当碰到<code>#</code>和<code>##</code>命令时，是先替换再展开。</p>
+
+<p>这样我们就能理解为什么会输出上面的结果了。这时大家有会有一个新的疑问，为什么<code>h(f(1,2))</code>会得到预想的结果，也让我们来一步一步的分析：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="n">h</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>  <span class="o">-&gt;</span>  <span class="n">g</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>  <span class="o">-&gt;</span>  <span class="n">g</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>  <span class="o">-&gt;</span> <span class="mi">12</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">//转换结果</span>
+</span><span class='line'><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="n">h</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)));</span>  <span class="c1">//-&gt; printf(&quot;%s\n&quot;,&quot;12&quot;);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>当<code>h(f(1,2))</code>展开成<code>g(f(1,2))</code>时，因为没有碰到<code>#</code>或者<code>##</code>命令，所以会先展开<code>f(1,2)</code>。这样我们就能得到期望的结果。我们再来看一段类似的代码，大家先想想会输出什么结果再看答案，这样才能够加深对这两个命令的理解：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#define STRINGIFY2( x) #x</span>
+</span><span class='line'><span class="cp">#define STRINGIFY(x) STRINGIFY2(x)</span>
+</span><span class='line'><span class="cp">#define PASTE2( a, b) a##b</span>
+</span><span class='line'><span class="cp">#define PASTE( a, b) PASTE2( a, b)</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#define BAD_PASTE(x,y) x##y</span>
+</span><span class='line'><span class="cp">#define BAD_STRINGIFY(x) #x</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#define SOME_MACRO function_name</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">printf</span><span class="p">(</span> <span class="s">&quot;buggy results:</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">printf</span><span class="p">(</span> <span class="s">&quot;%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">STRINGIFY</span><span class="p">(</span> <span class="n">BAD_PASTE</span><span class="p">(</span> <span class="n">SOME_MACRO</span><span class="p">,</span> <span class="n">__LINE__</span><span class="p">)));</span>
+</span><span class='line'>    <span class="n">printf</span><span class="p">(</span> <span class="s">&quot;%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">BAD_STRINGIFY</span><span class="p">(</span> <span class="n">BAD_PASTE</span><span class="p">(</span> <span class="n">SOME_MACRO</span><span class="p">,</span> <span class="n">__LINE__</span><span class="p">)));</span>
+</span><span class='line'>    <span class="n">printf</span><span class="p">(</span> <span class="s">&quot;%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">BAD_STRINGIFY</span><span class="p">(</span> <span class="n">PASTE</span><span class="p">(</span> <span class="n">SOME_MACRO</span><span class="p">,</span> <span class="n">__LINE__</span><span class="p">)));</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">printf</span><span class="p">(</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span> <span class="s">&quot;desired result:</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">printf</span><span class="p">(</span> <span class="s">&quot;%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">STRINGIFY</span><span class="p">(</span> <span class="n">PASTE</span><span class="p">(</span> <span class="n">SOME_MACRO</span><span class="p">,</span> <span class="n">__LINE__</span><span class="p">)));</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>下面是输出结果：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="n">buggy</span> <span class="nl">results:</span>
+</span><span class='line'><span class="n">SOME_MACRO__LINE__</span>
+</span><span class='line'><span class="n">BAD_PASTE</span><span class="p">(</span> <span class="n">SOME_MACRO</span><span class="p">,</span> <span class="n">__LINE__</span><span class="p">)</span>
+</span><span class='line'><span class="n">PASTE</span><span class="p">(</span> <span class="n">SOME_MACRO</span><span class="p">,</span> <span class="n">__LINE__</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">desired</span> <span class="nl">result:</span>
+</span><span class='line'><span class="n">function_name21</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>大家可以看看是否跟你预期的输出结果一致，如果有不一致的地方可以一行一行进行宏展开。</p>
+
+<hr />
+
+<p>下面还有几个问题要注意一下，我们先来看例子：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="cp">#define hash_hash # ## #</span>
+</span><span class='line'><span class="cp">#define mkstr(a) # a</span>
+</span><span class='line'><span class="cp">#define in_between(a) mkstr(a)</span>
+</span><span class='line'><span class="cp">#define join(c, d) in_between(c hash_hash d)</span>
+</span><span class='line'><span class="kt">char</span> <span class="n">p</span><span class="p">[]</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">);</span> <span class="c1">//  -&gt;  char p[] = &quot;x ## y&quot;;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这里大家会奇怪为什么<code>x hash_hash y</code>会变成<code>x ## y</code>，这是因为<code>#</code>只在函数类宏命令中才作为一个运算符，这里<code>hash_hash</code>并不是一个函数类宏，而是对象类宏(<strong>object-like macro</strong>)，所以<code># ## #</code>会被中间的<code>##</code>的运算符合并成<code>##</code>，<strong>不过我有个疑问，为何转成<code>##</code>后<code>x ## y</code>没有被合并成<code>xy</code>，个人猜测是因为这种被宏转换后拼成的<code>##</code>并不能算运算符。如果大家知道答案请告知我。</strong></p>
+
+<p>大家还可能有一个疑问<code>#define hash_hash # ## #</code>为什么不直接写成<code>#define hash_hash ##</code>，这是因为<code>##</code>是运算符，两边没有参数在编译时会报错，无法通过编译器编译。</p>
+
+<hr />
+
+<p>另外一个要注意的地方是，<code>##</code>在函数类宏中有一个有趣的特性，还是先看例子：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="cp">#ifdef DEBUG</span>
+</span><span class='line'><span class="cp"># define DLog(fmt, ...) NSLog((@&quot;[FUN:%s] [LINE:%d] &quot; fmt), __FUNCTION__, __LINE__, ##__VA_ARGS__);</span>
+</span><span class='line'><span class="cp">#else</span>
+</span><span class='line'><span class="cp"># define DLog(...);</span>
+</span><span class='line'><span class="cp">#endif</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这里要声明一下，这个日志输出的宏并不严谨，原因请参考<a href="http://weibo.com/onevcat">@onevcat</a>的博客<a href="http://onevcat.com/2014/01/black-magic-in-macro/">宏定义的黑魔法 &ndash; 宏菜鸟起飞手册</a>中关于日志输出宏的描述。</p>
+
+<p>我们先来看一下这里的<code>##__VA_ARGS__</code>，假设我们在某个函数中调用了这个宏：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="n">DLog</span><span class="p">(</span><span class="s">@&quot;who am i?&quot;</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这里按照宏的方式展开会变成：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;[FUN:%s] [LINE:%d] who am i?&quot;</span><span class="p">,</span> <span class="n">__FUNCTION__</span><span class="p">,</span> <span class="n">__LINE__</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>为何在<code>__LINE__</code>的后面的逗号被<strong>吃掉</strong>了？这个就是<code>##</code>的特性，当<code>##</code>前面为逗号，后面<code>__VA_ARGS__</code>参数为空是会将前面的这个逗号给吃掉。</p>
+
+<p>欢迎转载，请注明出处。</p>
+
+<p>作者 <a href="http://weibo.com/boatsx">@boat_sx</a>   <br/>
+于 2014 年 03月 23日  <br/>
+上海</p>
+
+<p>参考资料：</p>
+
+<ul>
+<li><a href="http://onevcat.com/2014/01/black-magic-in-macro/">http://onevcat.com/2014/01/black-magic-in-macro/</a></li>
+<li><a href="http://stackoverflow.com/questions/4364971/and-in-macros">http://stackoverflow.com/questions/4364971/and-in-macros</a></li>
+<li><a href="http://stackoverflow.com/questions/216875/in-macros">http://stackoverflow.com/questions/216875/in-macros</a></li>
+<li><a href="http://stackoverflow.com/questions/4364971/and-in-macros">http://stackoverflow.com/questions/4364971/and-in-macros</a></li>
+<li><a href="http://stackoverflow.com/questions/14395927/and-order-of-expansion">http://stackoverflow.com/questions/14395927/and-order-of-expansion</a></li>
+</ul>
+
+]]></content>
+  </entry>
   
 </feed>
